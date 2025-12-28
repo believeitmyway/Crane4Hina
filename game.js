@@ -40,25 +40,34 @@ function init() {
         camera.lookAt(0, 1, 0);
 
         // Renderer
-        renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap pixel ratio for performance
+        // DISABLE ANTIALIAS for maximum compatibility
+        renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        // DISABLE SHADOWS initially to prevent crashes
+        renderer.shadowMap.enabled = false;
+        // renderer.shadowMap.type = THREE.BasicShadowMap;
+
         document.body.appendChild(renderer.domElement);
         console.log('Renderer created');
 
+        // Log WebGL Info
+        const gl = renderer.getContext();
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+            const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+            const rendererName = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+            console.log(`GPU: ${vendor} - ${rendererName}`);
+        }
+
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
+        const ambientLight = new THREE.AmbientLight(0x404040, 2.0); // Brighter since shadows are off
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
         dirLight.position.set(5, 10, 7);
-        dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 1024; // Reduced from 2048 for mobile compatibility
-        dirLight.shadow.mapSize.height = 1024;
-        dirLight.shadow.camera.near = 0.5;
-        dirLight.shadow.camera.far = 50;
+        // dirLight.castShadow = true; // Disabled for stability
         scene.add(dirLight);
 
         // --- 2. Cannon-es Setup ---
@@ -107,8 +116,14 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+let frameCount = 0;
 function animate() {
     requestAnimationFrame(animate);
+
+    frameCount++;
+    if (frameCount % 120 === 0) {
+        console.log(`Render Loop Alive: Frame ${frameCount}`);
+    }
 
     const time = performance.now();
     const dt = (time - lastTime) / 1000;
@@ -151,8 +166,8 @@ function createBody(shape, mass, position, material, color) {
     }
 
     const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: color }));
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+    // mesh.castShadow = true; // Disabled for stability
+    // mesh.receiveShadow = true; // Disabled for stability
     mesh.userData.physicsBody = body;
     scene.add(mesh);
 
@@ -173,7 +188,7 @@ function createEnvironment() {
     // Floor
     const platformShape = new CANNON.Box(new CANNON.Vec3(2, 0.1, 2));
     const { mesh: floorMesh } = createBody(platformShape, 0, new CANNON.Vec3(0, -0.1, 0), floorMaterial, 0xeeeeee);
-    floorMesh.receiveShadow = true;
+    // floorMesh.receiveShadow = true;
     // Remove initial floor to make hole
     scene.remove(floorMesh);
     world.removeBody(floorMesh.userData.physicsBody);
@@ -183,7 +198,13 @@ function createEnvironment() {
     const wallShapeBack = new CANNON.Box(new CANNON.Vec3(2, 1.5, 0.05));
 
     const { mesh: leftWall } = createBody(wallShapeSide, 0, new CANNON.Vec3(-2.05, 1.5, 0), wallMaterial, 0x88ccff);
-    leftWall.material = new THREE.MeshPhysicalMaterial({ color: 0x88ccff, transmission: 0.9, opacity: 1, transparent: true });
+    // Use Standard Material with Opacity instead of Physical Transmission (heavy)
+    leftWall.material = new THREE.MeshStandardMaterial({
+        color: 0x88ccff,
+        transparent: true,
+        opacity: 0.3,
+        roughness: 0.1
+    });
 
     const { mesh: rightWall } = createBody(wallShapeSide, 0, new CANNON.Vec3(2.05, 1.5, 0), wallMaterial, 0x88ccff);
     rightWall.material = leftWall.material;
@@ -405,7 +426,7 @@ class Prize {
             metalness: 0.0
         });
         const mainMesh = new THREE.Mesh(mainGeo, mainMat);
-        mainMesh.castShadow = true;
+        // mainMesh.castShadow = true;
         container.add(mainMesh);
 
         const earGeo = new THREE.ConeGeometry(0.1, 0.2, 16);
