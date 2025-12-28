@@ -32,6 +32,38 @@
             font-weight: bold;
             color: #fff;
         }
+        #mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            pointer-events: none; /* Let clicks pass through gaps */
+        }
+        .control-btn {
+            pointer-events: auto;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 105, 180, 0.8); /* Hot pink */
+            border: 4px solid white;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            touch-action: none; /* Prevent scroll */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: transform 0.1s, background 0.1s;
+        }
+        .control-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 105, 180, 1.0);
+        }
     </style>
 </head>
 <body>
@@ -44,6 +76,11 @@
             <p>3. Watch the auto-sequence!</p>
             <p><em>Tip: Nudge the center of gravity.</em></p>
         </div>
+    </div>
+
+    <div id="mobile-controls">
+        <div id="btn-right" class="control-btn">1. RIGHT</div>
+        <div id="btn-back" class="control-btn">2. BACK</div>
     </div>
 
     <!-- Import Map for Modules -->

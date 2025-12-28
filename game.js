@@ -441,6 +441,30 @@ function initGameLogic() {
         if (e.key === 'ArrowRight') inputState.right = false;
         if (e.key === 'ArrowUp') inputState.up = false;
     });
+
+    // Mobile Touch Controls
+    const btnRight = document.getElementById('btn-right');
+    const btnBack = document.getElementById('btn-back');
+
+    if (btnRight && btnBack) {
+        const handleInput = (key, active) => {
+            if (key === 'right') inputState.right = active;
+            if (key === 'back') inputState.up = active;
+        };
+
+        // Right Button
+        btnRight.addEventListener('mousedown', () => handleInput('right', true));
+        btnRight.addEventListener('mouseup', () => handleInput('right', false));
+        btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput('right', true); }, { passive: false });
+        btnRight.addEventListener('touchend', (e) => { e.preventDefault(); handleInput('right', false); });
+
+        // Back Button
+        btnBack.addEventListener('mousedown', () => handleInput('back', true));
+        btnBack.addEventListener('mouseup', () => handleInput('back', false));
+        btnBack.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput('back', true); }, { passive: false });
+        btnBack.addEventListener('touchend', (e) => { e.preventDefault(); handleInput('back', false); });
+    }
+
     if (crane) crane.setTargetPosition(GAME_CONFIG.startX, GAME_CONFIG.startZ);
 }
 
