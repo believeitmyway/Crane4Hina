@@ -6,6 +6,17 @@
     <title>Realistic Physics Crane Game</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #202020; }
+        #loading-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; color: white; display: flex; align-items: center; justify-content: center;
+            z-index: 9999; font-family: sans-serif; font-size: 24px;
+        }
+        #debug-console {
+            position: absolute; top: 0; left: 0; width: 100%; height: 50%;
+            background: rgba(0,0,0,0.8); color: lime; overflow-y: scroll;
+            z-index: 10000; pointer-events: none; font-family: monospace; font-size: 12px;
+            padding: 10px; display: none; /* Hidden by default, toggled if needed or kept visible for debug version */
+        }
         #ui {
             position: absolute;
             top: 20px;
@@ -82,6 +93,47 @@
         <div id="btn-right" class="control-btn">1. RIGHT</div>
         <div id="btn-back" class="control-btn">2. BACK</div>
     </div>
+
+    <div id="loading-overlay">Loading Physics Engine...</div>
+    <div id="debug-console"></div>
+
+    <script>
+        // Debug Console Setup
+        const debugConsole = document.getElementById('debug-console');
+        // Force display for debugging this issue
+        debugConsole.style.display = 'block';
+
+        function logToScreen(msg, type = 'log') {
+            const div = document.createElement('div');
+            div.textContent = `[${type.toUpperCase()}] ${msg}`;
+            if (type === 'error') div.style.color = 'red';
+            if (type === 'warn') div.style.color = 'yellow';
+            debugConsole.appendChild(div);
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+        }
+
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logToScreen(args.join(' '), 'log');
+        };
+
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            logToScreen(args.join(' '), 'warn');
+        };
+
+        const originalError = console.error;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            logToScreen(args.join(' '), 'error');
+        };
+
+        window.onerror = function(message, source, lineno, colno, error) {
+            logToScreen(`${message} at ${source}:${lineno}:${colno}`, 'error');
+        };
+    </script>
 
     <!-- Import Map for Modules -->
     <script type="importmap">
