@@ -25,62 +25,80 @@ let inputState = { right: false, up: false };
 
 // Initialize
 function init() {
-    // --- 1. Three.js Setup ---
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x202020);
-    scene.fog = new THREE.Fog(0x202020, 10, 50);
+    try {
+        console.log('Init started');
 
-    // Camera
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 3, 6);
-    camera.lookAt(0, 1, 0);
+        // --- 1. Three.js Setup ---
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x202020);
+        scene.fog = new THREE.Fog(0x202020, 10, 50);
+        console.log('Scene created');
 
-    // Renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    document.body.appendChild(renderer.domElement);
+        // Camera
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 3, 6);
+        camera.lookAt(0, 1, 0);
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
-    scene.add(ambientLight);
+        // Renderer
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap pixel ratio for performance
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+        console.log('Renderer created');
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-    dirLight.position.set(5, 10, 7);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 2048;
-    dirLight.shadow.mapSize.height = 2048;
-    dirLight.shadow.camera.near = 0.5;
-    dirLight.shadow.camera.far = 50;
-    scene.add(dirLight);
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
+        scene.add(ambientLight);
 
-    // --- 2. Cannon-es Setup ---
-    world = new CANNON.World();
-    world.gravity.set(0, -9.82, 0);
-    world.broadphase = new CANNON.NaiveBroadphase();
-    world.solver.iterations = 10;
+        const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+        dirLight.position.set(5, 10, 7);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024; // Reduced from 2048 for mobile compatibility
+        dirLight.shadow.mapSize.height = 1024;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 50;
+        scene.add(dirLight);
 
-    // Contact Materials
-    const defaultMaterial = new CANNON.Material('default');
-    const defaultContactMaterial = new CANNON.ContactMaterial(defaultMaterial, defaultMaterial, {
-        friction: 0.3,
-        restitution: 0.3,
-    });
-    world.addContactMaterial(defaultContactMaterial);
+        // --- 2. Cannon-es Setup ---
+        world = new CANNON.World();
+        world.gravity.set(0, -9.82, 0);
+        world.broadphase = new CANNON.NaiveBroadphase();
+        world.solver.iterations = 10;
+        console.log('Physics world created');
 
-    // --- 3. Create Objects ---
-    createEnvironment();
-    createCrane();
-    createPrize();
-    initGameLogic();
+        // Contact Materials
+        const defaultMaterial = new CANNON.Material('default');
+        const defaultContactMaterial = new CANNON.ContactMaterial(defaultMaterial, defaultMaterial, {
+            friction: 0.3,
+            restitution: 0.3,
+        });
+        world.addContactMaterial(defaultContactMaterial);
 
-    // Handle Resize
-    window.addEventListener('resize', onWindowResize);
+        // --- 3. Create Objects ---
+        createEnvironment();
+        createCrane();
+        createPrize();
+        initGameLogic();
+        console.log('Objects created');
 
-    // Start Loop
-    lastTime = performance.now();
-    animate();
+        // Handle Resize
+        window.addEventListener('resize', onWindowResize);
+
+        // Start Loop
+        lastTime = performance.now();
+        animate();
+        console.log('Animation loop started');
+
+        // Remove loading overlay
+        const loader = document.getElementById('loading-overlay');
+        if (loader) loader.style.display = 'none';
+
+    } catch (e) {
+        console.error('CRITICAL ERROR IN INIT:', e);
+        if (window.logToScreen) window.logToScreen('CRITICAL ERROR: ' + e.message, 'error');
+    }
 }
 
 function onWindowResize() {
